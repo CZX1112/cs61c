@@ -1,3 +1,8 @@
+1.ls -l
+2.mv
+3.chmod
+4.pwd
+5.ping
 1.find
 2.ps
 3.kill
