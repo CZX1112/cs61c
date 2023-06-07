@@ -75,6 +75,13 @@ int main(int argc, char **argv) {
 unsigned int stringHash(void *s) {
   char *string = (char *)s;
   // -- TODO --
+  unsigned int result = 0;
+  int c;
+  while (*string != 0) {
+    result = result * 31 + *string;
+    string++;
+  }
+  return result;
 }
 
 /*
@@ -88,6 +95,12 @@ int stringEquals(void *s1, void *s2) {
   char *string1 = (char *)s1;
   char *string2 = (char *)s2;
   // -- TODO --
+  if (strcmp(s1, s2) == 0) {
+    return 1;
+  }
+  else {
+    return 0;
+  }
 }
 
 /*
@@ -116,6 +129,38 @@ int stringEquals(void *s1, void *s2) {
  */
 void readDictionary(char *dictName) {
   // -- TODO --
+  FILE *fp;
+  char *word = (char *)malloc(80);
+  int total = 80;
+  int i = 0;
+  char c;
+  fp = fopen(dictName, "r");
+  if (fp == NULL) {
+    fprintf(stderr, "Can't find the dictionary file.");
+    exit(1);
+  }
+
+  while ((c = fgetc(fp)) != EOF) {
+    // 遇到换行符
+    if (c == '\n') {
+      char *key = (char *)malloc((i + 1) * sizeof(char));
+      memcpy(key, word, i);
+      key[i] = '\0';
+      if (findData(dictionary, key) == NULL) {
+        insertData(dictionary, key, key);
+      }
+      i = 0;
+      continue;
+    }
+    //word内存满了
+    if (i == total) {
+      word = (char *)realloc(word, total *= 2);
+    }
+    word[i] = c;
+    i += 1;
+  }
+  free(word);
+  fclose(fp);
 }
 
 /*
@@ -152,4 +197,55 @@ void readDictionary(char *dictName) {
  */
 void processInput() {
   // -- TODO --
+  int total = 80;
+  char *str1 = (char *)malloc(sizeof(char) * total);
+  char *str2 = (char *)malloc(sizeof(char) * total);
+  char *str3 = (char *)malloc(sizeof(char) * total);
+  int i = 0;
+  int c = 0;
+  while ((c = fgetc(stdin)) != EOF) {
+    //内存满了
+    if (i == total) {
+      str1 = (char *)realloc(str1, total *= 2);
+      str2 = (char *)realloc(str2, total *= 2);
+      str3 = (char *)realloc(str3, total *= 2);
+    }
+    //读到的为字母
+    if (isalpha(c) != 0) {
+      //1.原字符
+      str1[i] = (char)c;
+      //2.全为小写的字符
+      str2[i] = (char)tolower(c);
+      //3.开头不一定小写
+      str3[i] = (i == 0) ? c : (char)tolower(c);
+      i += 1;
+    }
+    //读到的为非字母
+    else {
+      //之前有单词
+      if (isalpha(str1[0])) {
+        str1[0] = '\0';
+        str2[0] = '\0';
+        str3[0] = '\0';
+        //检查是否在字典里出现
+        if (findData(dictionary, str1) == NULL && findData(dictionary, str2) == NULL && findData(dictionary, str3) == NULL) {
+          fprintf(stdout, "%s [sic]%c", str1, c);
+        }
+        else {
+          fprintf(stdout, "%s%c", str1, c);
+        }
+      }
+      //之前没有单词
+      else {
+        fprintf(stdout, "%c", c);
+      }
+      i = 0;
+      memset(str1, 0, strlen(str1));
+      memset(str2, 0, strlen(str2));
+      memset(str3, 0, strlen(str3));
+    }
+  }
+  free(str1);
+  free(str2);
+  free(str3);
 }
