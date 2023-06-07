@@ -45,6 +45,22 @@ void insertData(HashTable *table, void *key, void *data) {
   // 1. 使用 table->hashFunction 找到正确的哈希桶位置。
   // 2. 分配一个新的哈希桶结构。
   // 3. 追加到链表或创建它（如果尚不存在）。
+  unsigned int loc = table->hashFunction(key);
+  loc = loc % table->size;
+  struct HashBucket *bucket = (struct HashBucket *)malloc(sizeof(struct HashBucket));
+  bucket->key = key;
+  bucket->data = data;
+  bucket->next = NULL;
+  if (table->data[loc] == NULL) {
+    table->data[loc] = bucket;
+  }
+  else {
+    struct HashBucket *currBucket = table->data[loc];
+    while (currBucket->next != NULL) {
+      currBucket = currBucket->next;
+    }
+    currBucket->next = bucket;
+  }
 }
 
 /*
@@ -61,4 +77,13 @@ void *findData(HashTable *table, void *key) {
   // 2. Walk the linked list and check for equality with table->equalFunction.
   // 1. 使用 table->hashFunction 找到正确的哈希桶。
   // 2. 遍历链表并使用 table->equalFunction 检查是否相等。
+  unsigned int loc = table->hashFunction(key);
+  struct HashBucket *bucket = table->data[loc];
+  while (bucket != NULL) {
+    if (table->equalFunction(bucket->key, key)) {
+      return bucket->data;
+    }
+    bucket = bucket->next;
+  }
+  return NULL;
 }
