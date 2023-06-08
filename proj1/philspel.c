@@ -75,13 +75,12 @@ int main(int argc, char **argv) {
 unsigned int stringHash(void *s) {
   char *string = (char *)s;
   // -- TODO --
-  unsigned int result = 0;
+  unsigned int hash = 5381;
   int c;
-  while (*string != 0) {
-    result = result * 31 + *string;
-    string++;
+  while ((c = *(string++))) {
+    hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
   }
-  return result;
+  return hash % dictionary->size;
 }
 
 /*
@@ -95,7 +94,7 @@ int stringEquals(void *s1, void *s2) {
   char *string1 = (char *)s1;
   char *string2 = (char *)s2;
   // -- TODO --
-  if (strcmp(s1, s2) == 0) {
+  if (strcmp(string1, string2) == 0) {
     return 1;
   }
   else {
@@ -127,40 +126,29 @@ int stringEquals(void *s1, void *s2) {
  错误打印一些消息并调用 exit(1) 以干净地退出程序。 由于格式是一次一个单词，中间有新行，您可
  以安全地使用 fscanf() 来读取字符串，直到您想要处理任意长的字典字符为止。
  */
-void readDictionary(char *dictName) {
-  // -- TODO --
-  FILE *fp;
-  char *word = (char *)malloc(80);
-  int total = 80;
-  int i = 0;
-  char c;
-  fp = fopen(dictName, "r");
-  if (fp == NULL) {
-    fprintf(stderr, "Can't find the dictionary file.");
-    exit(1);
-  }
-
-  while ((c = fgetc(fp)) != EOF) {
-    // 遇到换行符
-    if (c == '\n') {
-      char *key = (char *)malloc((i + 1) * sizeof(char));
-      memcpy(key, word, i);
-      key[i] = '\0';
-      if (findData(dictionary, key) == NULL) {
-        insertData(dictionary, key, key);
-      }
-      i = 0;
-      continue;
+void readDictionary(char *dictName)
+{
+    // -- TODO --
+    FILE *fp;
+    fp = fopen(dictName,"r");
+    if (fp == NULL)
+    {
+        fprintf(stderr, "Error in file opening\n");
+        exit(1);
     }
-    //word内存满了
-    if (i == total) {
-      word = (char *)realloc(word, total *= 2);
-    }
-    word[i] = c;
-    i += 1;
-  }
-  free(word);
-  fclose(fp);
+    char *line = (char*)malloc(sizeof(char)*70);
+    do{
+        fscanf(fp,"%s",line);
+        char *real = (char*)malloc(sizeof(char)*(strlen(line)+1));
+        strcpy(real,line);
+        if (findData(dictionary, real) == NULL)
+        {
+            insertData(dictionary, real ,real);
+        }
+        memset(line,0,strlen(line));
+    }while(!feof(fp));
+    free(line);
+    fclose(fp);
 }
 
 /*
@@ -224,9 +212,9 @@ void processInput() {
     else {
       //之前有单词
       if (isalpha(str1[0])) {
-        str1[0] = '\0';
-        str2[0] = '\0';
-        str3[0] = '\0';
+        str1[i] = '\0';
+        str2[i] = '\0';
+        str3[i] = '\0';
         //检查是否在字典里出现
         if (findData(dictionary, str1) == NULL && findData(dictionary, str2) == NULL && findData(dictionary, str3) == NULL) {
           fprintf(stdout, "%s [sic]%c", str1, c);
