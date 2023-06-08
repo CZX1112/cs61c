@@ -36,30 +36,58 @@ HashTable *createHashTable(int size, unsigned int (*hashFunction)(void *),
   insertData(someHashTable, (void *) string, (void *) string ). 
   因为这个拼写检查器我们只需要一组数据结构，所以我们可以使用字符串作为键和数据。
  */
-void insertData(HashTable *table, void *key, void *data) {
+// void insertData(HashTable *table, void *key, void *data) {
+//   // -- TODO --
+//   // HINT:
+//   // 1. Find the right hash bucket location with table->hashFunction.
+//   // 2. Allocate a new hash bucket struct.
+//   // 3. Append to the linked list or create it if it does not yet exist. 
+//   // 1. 使用 table->hashFunction 找到正确的哈希桶位置。
+//   // 2. 分配一个新的哈希桶结构。
+//   // 3. 追加到链表或创建它（如果尚不存在）。
+//   unsigned int loc = table->hashFunction(key);
+//   loc = loc % table->size;
+//   struct HashBucket *bucket = (struct HashBucket *)malloc(sizeof(struct HashBucket));
+//   bucket->key = key;
+//   bucket->data = data;
+//   bucket->next = NULL;
+//   if (table->data[loc] == NULL) {
+//     table->data[loc] = bucket;
+//   }
+//   else {
+//     struct HashBucket *currBucket = table->data[loc];
+//     while (currBucket->next != NULL) {
+//       currBucket = currBucket->next;
+//     }
+//     currBucket->next = bucket;
+//   }
+// }
+
+void insertData(HashTable *table, void *key, void *data)
+{
   // -- TODO --
   // HINT:
   // 1. Find the right hash bucket location with table->hashFunction.
   // 2. Allocate a new hash bucket struct.
-  // 3. Append to the linked list or create it if it does not yet exist. 
-  // 1. 使用 table->hashFunction 找到正确的哈希桶位置。
-  // 2. 分配一个新的哈希桶结构。
-  // 3. 追加到链表或创建它（如果尚不存在）。
+  // 3. Append to the linked list or create it if it does not yet exist.
   unsigned int loc = table->hashFunction(key);
-  loc = loc % table->size;
-  struct HashBucket *bucket = (struct HashBucket *)malloc(sizeof(struct HashBucket));
-  bucket->key = key;
-  bucket->data = data;
-  bucket->next = NULL;
-  if (table->data[loc] == NULL) {
-    table->data[loc] = bucket;
+  struct HashBucket *bucketp = (struct HashBucket *)malloc(sizeof(struct HashBucket));
+  bucketp->key = key;
+  bucketp->data = data;
+  if (table->data[loc] == NULL)
+  {
+    table->data[loc] = bucketp;
   }
-  else {
-    struct HashBucket *currBucket = table->data[loc];
-    while (currBucket->next != NULL) {
-      currBucket = currBucket->next;
+  else
+  {
+    struct HashBucket *workp = table->data[loc];
+    struct HashBucket *nextp = table->data[loc]->next;
+    while (nextp != NULL)
+    {
+      workp = nextp;
+      nextp = workp->next;
     }
-    currBucket->next = bucket;
+    workp->next = bucketp;
   }
 }
 
@@ -70,20 +98,19 @@ void insertData(HashTable *table, void *key, void *data) {
  /*
  这将返回给定键的相应数据。 如果未找到密钥，则返回 NULL。
  */
-void *findData(HashTable *table, void *key) {
+void *findData(HashTable *table, void *key)
+{
   // -- TODO --
   // HINT:
   // 1. Find the right hash bucket with table->hashFunction.
   // 2. Walk the linked list and check for equality with table->equalFunction.
-  // 1. 使用 table->hashFunction 找到正确的哈希桶。
-  // 2. 遍历链表并使用 table->equalFunction 检查是否相等。
   unsigned int loc = table->hashFunction(key);
-  struct HashBucket *bucket = table->data[loc];
-  while (bucket != NULL) {
-    if (table->equalFunction(bucket->key, key)) {
-      return bucket->data;
+  struct HashBucket *workp = table->data[loc];
+  while(workp != NULL){
+    if((table->equalFunction)(key, workp->key) != 0){
+      return workp->data;
     }
-    bucket = bucket->next;
+    workp = workp->next;
   }
   return NULL;
 }
