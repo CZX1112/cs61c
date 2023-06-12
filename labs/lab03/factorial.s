@@ -28,5 +28,8 @@ loop:
     beq a0, x0, loop_end
     mul s2, s2, a0
     addi a0, a0, -1
-    
+    jal x0, loop
 loop_end:
+    add a0, s2, x0
+    add s2, x0, x0
+    jr ra
