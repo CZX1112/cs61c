@@ -64,12 +64,11 @@ vector_t *vector_new() {
     vector_t *retval;
 
     /* First, we need to allocate memory on the heap for the struct */
-    /* First, we need to allocate memory on the heap for the struct */
-    retval = /* YOUR CODE HERE */
+    retval = /* YOUR CODE HERE */(vector_t *)malloc(sizeof(vector_t));
 
     /* Check our return value to make sure we got memory */
     /* 检查我们的返回值以确保我们有内存 */
-    if (/* YOUR CODE HERE */) {
+    if (/* YOUR CODE HERE */retval == NULL) {
         allocation_failed();
     }
 
@@ -78,19 +77,19 @@ vector_t *vector_new() {
        what do you need to do? */
     /* 现在我们需要初始化我们的数据。 既然 retval->data 应该是
     可以动态增长的，那么需要做什么呢？ */
-    retval->size = /* YOUR CODE HERE */;
-    retval->data = /* YOUR CODE HERE */;
+    retval->size = 1/* YOUR CODE HERE */;
+    retval->data = (int *)malloc(sizeof(int))/* YOUR CODE HERE */;
 
     /* Check the data attribute of our vector to make sure we got memory */
     /* 检查我们向量的数据属性以确保我们有内存 */
-    if (/* YOUR CODE HERE */) {
+    if (/* YOUR CODE HERE */retval->data == NULL) {
         free(retval);				//Why is this line necessary?
         allocation_failed();
     }
 
     /* Complete the initialization by setting the single component to zero */
     /* 通过将单个组件置零来完成初始化 */
-    /* YOUR CODE HERE */ = 0;
+    /* YOUR CODE HERE */retval->data[0] = 0;
 
     /* and return... */
     return retval;
@@ -111,8 +110,8 @@ int vector_get(vector_t *v, size_t loc) {
      * Otherwise, return what is in the passed location.
      */
     /* 如果请求的位置高于我们分配的位置，则返回 0。否则，返回传递位置中的内容。 */
-    if (loc < /* YOUR CODE HERE */) {
-        return /* YOUR CODE HERE */;
+    if (loc < /* YOUR CODE HERE */v->size) {
+        return /* YOUR CODE HERE */v->data[loc];
     } else {
         return 0;
     }
@@ -123,6 +122,12 @@ int vector_get(vector_t *v, size_t loc) {
 /* 释放为传递的向量分配的内存。请记住，您需要释放所有分配的内存。 */
 void vector_delete(vector_t *v) {
     /* YOUR SOLUTION HERE */
+    if (v != NULL) {
+        if (v->data != NULL) {
+            free(v->data);
+        }
+        free(v);
+    }
 }
 
 /* Set a value in the vector. If the extra memory allocation fails, call
@@ -135,4 +140,23 @@ void vector_set(vector_t *v, size_t loc, int value) {
     /* 如果位置大于我们分配的大小，您需要做什么？ 请记住，未设置的位置应包含值 0。 */
 
     /* YOUR SOLUTION HERE */
+    if (loc >= v->size) {
+        int preSize = v->size;
+        int newSize = loc + 1;
+        int *newData = (int *)malloc(sizeof(int) * newSize);
+        if (newData == NULL) {
+            allocation_failed();
+        }
+        // 复制内容
+        for (int i = 0; i < preSize; i++) {
+            newData[i] = v->data[i];
+        }
+        for (int i = preSize; i < newSize; i++) {
+            newData[i] = 0;
+        }
+        free(v->data);
+        v->size = newSize;
+        v->data = newData;
+    }
+    v->data[loc] = value;
 }
