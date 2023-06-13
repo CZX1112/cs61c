@@ -1,0 +1,8 @@
+在 RISC-V 中，我们有两种存储数据的方法：主存和寄存器。 寄存器比使用主存储器快得多，
+但空间非常有限（每个 32 位）。 请注意，您应该始终使用命名寄存器（例如 s0 而不是 x8）。
+
+3.1 Can you convert each instruction’s registers to the other form?
+add s0, zero, a1——add x8, x0, x11
+or x18, x1, x30——or s2, ra, t5
+
+Note that you should ALWAYS use the named registers (e.g. s0 rather than x8).

@@ -1,0 +1,25 @@
+More Translating between C and RISC-V
+
+将 RISC-V 代码转换为 C。这个 RISC-V 函数计算是什么？ 假设没有堆栈或与内存相关的问题，
+并且假设没有负输入
+
+// a0 -> x, a1 -> y,
+// t0 -> result
+// Function computes pow(x, y)
+// Direct translation:
+int power(int x, int y) {
+    int result = 1;
+    while (y != 0) {
+        result *= x;
+        y--;
+    }
+    return result;
+}
+
+             addi t0, x0, 1
+Loop: beq a1, x0, Done
+             mul t0, t0, a0
+             addi a1, a1, -1
+             jal x0, Loop
+Done: add a0, t0, x0
+             jr ra

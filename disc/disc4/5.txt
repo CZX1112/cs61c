@@ -1,0 +1,76 @@
+C to RISC-V
+Translate between the C and RISC-V verbatim.
+
+// s0 -> a, s1 -> b
+// s2 -> c, s3 -> z
+int a = 4, b = 5, c = 6, z;
+z = a + b + c + 10;
+
+addi s0, x0, 4
+addi s1, x0, 5
+addi s2, x0, 5
+addi s3, s0, s1
+addi s3, s3, s2
+addi s3, s3, 10
+
+// s0 -> int * p = intArr;
+// s1 - > a;
+*p = 0;
+int a = 2;
+p[1] = p[a] = a;
+
+sw x0, 0(s0)
+addi s1, x0, 2
+sw s1, 4(s0)
+slli t0, s1, 2
+add t0, t0, s0
+sw s1, 0(t0)
+
+// s0 -> a, s1 -> b
+int a = 5, b = 10;
+if (a + a == b) {
+    a = 0;
+}
+else {
+    b = a - 1;
+}
+
+addi s0, x0, 5
+addi s1, x0, 10
+add t0, s0, s0
+bne t0, s1, else
+add s0, x0, x0
+jal x0, exit
+else:
+    addi s1, s0, -1
+exit:
+
+// computes s1 = 2^30;
+s1 = 1;
+for (s0 = 0; s0 < 30; s0++) {
+    s1 *= 2;
+}
+
+addi s0, x0, 0
+addi s1, x0, 1
+addi t0, x0, 30
+loop:
+    beq s0, t0, exit
+    add s1, s1, s1
+    addi s0, s0, 1
+    jal x0, loop
+exit:
+
+// s0 -> n, s1 -> sum
+// assume n > 0 to start
+for (int sum = 0; n > 0; n--) {
+    sum += n;
+}
+
+addi s1, x0, 0
+loop:
+    beq s0, x0, exit
+    add s1, s1, s0
+    add s0, s0, -1
+    jal x0, loop
+exit:

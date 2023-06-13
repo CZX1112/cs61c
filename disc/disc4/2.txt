@@ -1,0 +1,7 @@
+RISC-V is an assembly language, which is comprised of simple instructions that
+each do a single task such as addition or storing a chunk of data to memory.
+For example, on the left is a line of C code and on the right is a chunk of RISC-V
+code that accomplishes the same thing.
+
+addi s0, x0, 5 evaluates to x = 5. sw s0, 0(s1) evaluates to y[0] = x. mul t0,
+s0, s0 calculates x * x. sw t0, 4(s1) evaluates to y[1] = x * x.
