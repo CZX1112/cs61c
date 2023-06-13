@@ -8,3 +8,31 @@ Writing RISC-V Functions
 首先，让我们实现函数的核心：平方和求和。 我们将遵守调用者/被调用者约定，那么我们可以在哪个寄存器中期望参数 n？ 
 哪些寄存器应该保存 square 的参数和返回值？ sumSquare 的返回值应该放在什么寄存器中？
 
+add s0, a0, x0      #s0=n
+add s1, x0, x0      #s1(sum)=0
+loop:
+beq s0, x0, end     #s0=0时退出
+add a0, s0, x0      #a0=s0，作为square函数的传参
+jal ra, square      #调用square平方函数
+add s1, s1, a0      #把square函数的返回值加到sum s1中
+addi s0, s0, -1     #s0减1
+jal x0, loop        #回到loop函数处
+end:
+add a0, s1, x0      #a0=s1(return num)
+
+8.2
+由于 sumSquare 是被调用者，我们需要确保它不会覆盖调用者可能使用的任何寄存器。 
+鉴于您的上述实施，请编写序言和结语以说明您使用的寄存器。
+
+prologue:
+addi sp, sp, -12    #记录保存参数
+sw ra, 0(sp)        #保存返回地址
+sw s0, 4(sp)        #保存寄存器s0
+sw s1, 8(sp)        #保存寄存器s1
+
+epilogue:
+lw ra, 0(sp)        #读取存回返回地址
+lw s0, 4(sp)        #读取存回寄存器s0值
+lw s1, 8(sp)        #读取存回寄存器s1值
+addi sp, sp, 12     #sp复位
+jr ra               #返回调用函数位置
