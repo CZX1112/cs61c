@@ -16,7 +16,7 @@ relu:
     # Prologue
     addi sp, sp, -4
     sw ra, 0(sp)
-    addi t0, x0, 1          # t0 = 1
+    addi t0, x0, 1           # t0 = 1
     blt a1, t0, exit_8       # if a1 < 1, go to exit and return 8
 
 loop_start:
