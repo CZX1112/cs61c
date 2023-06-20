@@ -66,12 +66,32 @@ outer_loop_start:
     bge s7, s1, outer_loop_end
 
 inner_loop_start:
-
-
+    # 检查当前列索引s8是否大于等于m1的列数s5
+    bge s8, s5, inner_loop_end
+    li t0, 4
+    mul t1, s7, s2
+    mul t1, t1, t0                          # t1: the start address of row
+    mul t2, s8, t0                          # t2: the start address of col
+    # prepare for dot, set augment
+    add a0, t1, s0                          # a0=t1+s0(address of m0) a0 (int*) is the pointer to the start of v0
+    add a1, t2, s3                          # a1=t2+s3(address of m1) a1 (int*) is the pointer to the start of v1
+    mv a2, s2                               # a2 (int)  is the length of the vectors
+    li a3, 4                                # a3 (int)  is the stride of v0
+    mul a4, s5, t0                          # a4 (int)  is the stride of v1
+    jal ra, dot                             # execute dot
+    # Returns: a0 (int)  is the dot product of v0 and v1
+    li t0, 4
+    mul t1, t0, s10                         # 存储结果d数组的偏移量
+    addi s10, s10, 1                        # next index
+    add t1, t1, s6                          # t1: the address of d
+    sw a0, 0(t1)                            # put the result in d
+    addi s8, s8, 1
+    j inner_loop_start
 
 inner_loop_end:
-
-
+    li s8, 0                                # 将m1的列索引s8重置为0
+    addi s7, s7, 1                          # 递增m0的行索引s7
+    j outer_loop_start                      # 跳转回外层循环的开始点
 
 outer_loop_end:
 
