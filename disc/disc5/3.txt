@@ -1,0 +1,38 @@
+3. Assembling RISC-V
+
+假设我们有一个 C 程序，它有一个函数 sum 来计算数组的和。 我们已经将其编译为 RISC-V，但尚未组装 RISC-V 代码。
+
+1 .import print.s # print.s is a different file
+2 .data
+3 array: .word 1 2 3 4 5
+4 .text
+5 sum: la t0, array
+6 li t1, 4
+7 mv t2, x0
+8 loop: blt t1, x0, end
+9 slli t3, t1, 2
+10 add t3, t0, t3
+11 lw t3, 0(t3)
+12 add t2, t2, t3
+13 addi t1, t1, -1
+14 j loop
+15 end: mv a0, t2
+16 jal ra, print_int # Defined in print.s
+
+3.1 哪些行包含需要转换为常规 RISC-V 指令的伪指令？
+
+5,6,7,14,15
+la 成为 auipc 和 addi 指令。
+li 在这里成为一条 addi 指令（例如 li t0, 4 → addi t0, x0, 4）。
+mv 成为一条 addi 指令（即 mv rd, rs → addi rd, rs, 0）。
+j 成为 jal 指令（例如 j Loop → jal x0,loop）。
+
+3.2 对于分支/跳转指令，哪些标签将在汇编器的第一遍中解析？ 第二？
+
+注意：此答案假设汇编器从上到下进行。 如果反过来，答案就会改变。
+
+循环（在 j 循环中）将在第一遍中解析，因为它是向后引用。 由于汇编器将记录第一遍中 end 的位置，
+因此它将在第二遍中解析 blt t1, x0, end 中的 end 。 （jal ra中的print_int，print_int将由链接器解析。）
+
+假设该程序的代码从地址 0x00061C00 开始。 下面的代码标有其在内存中的地址
+（思考：为什么第一行和第二行之间有 8 的跳转？）。

@@ -77,7 +77,11 @@ main:
 # Think: why might having a1 be useful?
 f:
     # YOUR CODE GOES HERE!
-
+    addi a0, a0, 3      # -3——3：0——6 compute the offset of array
+    li t0, 4            # the size of one data
+    mul t1, a0, t0      # t1 = a0 * 4, the offset of the data
+    add t2, a1, t1      # the address of current data
+    lw a0, 0(t2)        # set the data to a0
     jr ra               # Always remember to jr ra after your function!
 
 print_int:
