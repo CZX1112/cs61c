@@ -1,34 +1,47 @@
 Exercise 1
 	Scenario 1
-		1. 
-		2.
-		3.
+		每个缓存块8字节，可以存放数组两个元素，四个缓存块，总共存放8个数组元素，因此8个为一个循环。
+		若step size = 8，则每次都存在同一个slot中。
+		1. Because step size in bytes is exactly equal to total block size in bytes.
+		2. Still 0. Because the step size doesn't change. Everytime it access the cache, it access the same slot.
+		3. We can modify a1(step size) to 1.
 
 	Scenario 2
-		1.
-		2.
-		3.
-		4.
-		5.
+		256 / 4 = 64个数组元素，16 / 4 * 16 = 64，cache可以装64个，可以装满。
+		1. 64 (256 / 4 / 2 = 32, 32 * 2 = 64)读一次，写一次，step = 2，每次跳一个。
+		2. Every 4 access, it miss at first, then hit three times.
+		3. At first iteration, every 4 access it hit 3 times, so the hit rate equals to 3/4 = 75%. After the first iteration, the whole data need to be accessed is stored 
+	 	   in the cache. So after the first iteration, every access to the cache will hit. 
+		4. the hit rate will approach to 1 as Rep Count goes to infinity.
+		5. we should try to access 256 bytes of the array at a time and apply all of the function to that certain amount of array so we can be completely done with it before moving on,
+		   thereby keeping that certain data of array hot in the cache and not having to circle back to it later on! 
 
 	Scenario 3
-		1.
-		2.
-		3.
-		4.
-		5.
+		1. The hit rate of L1 is 50%. The hit rate of L2 is 0%. Overall the hit rate is 50%.
+		2. 32 access total. 16 of them miss.
+		3. 16 access total. Every time L1 miss, we access L2.
+		4. We can increase the block size of L2.
+		5. As we slowly increase the number of blocks in L1, the hit rates for L1 and L2 remain the same. As for L1 block size, the hit rate for L1 increase but for L2 remain the same.
 
 Exercise 2
-	ijk:
-	ikj:
-	jik:
-	jki:
-	kij:
-	kji:
+	ijk: 1.965 Gflop/s
+	ikj: 0.134 Gflop/s
+	jik: 1.600 Gflop/s
+	jki: 9.109 Gflop/s
+	kij: 0.151 Gflop/s
+	kji: 9.920 Gflop/s
 
-	1.
-	2.
-	3.
+	1. jki and kji perform the best. Because the average step size of C, A, B is smallest, which make full use of spatial locality and leads to highest hit rate.
+		ijk: C=0, A=n, B=1
+		ikj: C=n, A=0, B=n
+		jik: C=0, A=n, B=1
+		jki: C=1, A=1, B=0
+		kij: C=n, A=0, B=n
+		kji: C=1, A=1, B=0
+	2. ikj and kij perform the worst. Because the average step size of C, A, B is largest.
+		ikj: C=n, A=0, B=n
+		kij: C=n, A=0, B=n
+	3. We should stride as small size as we can.
 
 Exercise 3
 	Part 1
