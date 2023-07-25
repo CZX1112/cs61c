@@ -46,19 +46,39 @@ Exercise 2
 Exercise 3
 	Part 1
 		blocksize = 20, n = 100: 
+			Testing naive transpose: 0.004 milliseconds
+			Testing transpose with blocking: 0.004 milliseconds
 		blocksize = 20, n = 1000: 
+			Testing naive transpose: 1.17 milliseconds
+			Testing transpose with blocking: 1.125 milliseconds
 		blocksize = 20, n = 2000: 
+			Testing naive transpose: 25.537 milliseconds
+			Testing transpose with blocking: 7.316 milliseconds
 		blocksize = 20, n = 5000: 
+			Testing naive transpose: 178.148 milliseconds
+			Testing transpose with blocking: 34.625 milliseconds
 		blocksize = 20, n = 10000: 
+			Testing naive transpose: 849.474 milliseconds
+			Testing transpose with blocking: 177.153 milliseconds
 
-		1.
-		2.
+		1. when n = 1000
+		2. Because the it needs more calculation.
 
 	Part 2
 		blocksize = 50, n = 10000:
+			Testing naive transpose: 828.03 milliseconds
+			Testing transpose with blocking: 185.604 milliseconds
 		blocksize = 100, n = 10000:
+			Testing naive transpose: 839.61 milliseconds
+			Testing transpose with blocking: 154.832 milliseconds
 		blocksize = 500, n = 10000:
+			Testing naive transpose: 829.452 milliseconds
+			Testing transpose with blocking: 172.525 milliseconds
 		blocksize = 1000, n = 10000:
+			Testing naive transpose: 813.749 milliseconds
+			Testing transpose with blocking: 210.039 milliseconds
 		blocksize = 5000, n = 10000:
+			Testing naive transpose: 859.072 milliseconds
+			Testing transpose with blocking: 851.81 milliseconds
 
-		1.
+		1. Because the block size we set is not the actual block size in our hardware.
