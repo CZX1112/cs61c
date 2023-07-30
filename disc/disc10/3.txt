@@ -1,0 +1,22 @@
+3. Memory Mapped I/O
+
+3.1 对于这个问题，以下地址对应于某些 I/O 设备中的寄存器，而不是常规用户内存。
+• 0xFFFF0000—接收器控制：LSB 是就绪位（在轮询的情况下），可能还设置了我们现在不需要的其他位。
+• 0xFFFF0004—接收器数据：接收到的数据存储在最低字节中。
+• 0xFFFF0008—发送器控制：LSB 是就绪位（在轮询的情况下），可能还有我们现在不需要的其他位设置。
+• 0xFFFF000C—发送器数据：发送的数据存储在最低字节中。
+
+回想一下，只有当相应的就绪位为 1 时，接收器才会有数据，并且只有当其就绪位为 1 时，我们才能将数据写入发送器。
+编写从接收器读取字节的 RISC-V 代码（忙等待，如果 必要）并将该字节写入发送器（必要时忙等待）。
+
+    lui t0 0xffff0
+receive_wait:
+    lw t1 0(t0)
+    andi t1 t1 1 # poll on ready of receiver
+    beq t1 x0 receive_wait
+    lb t2 4(t0) # load data
+transmit_wait:
+    lw t1 8(t0) # poll on ready of transmitter
+    andi t1 t1 1
+    beq t1 x0 transmit_wait # write to transmitter
+    sb t2 12(t0)
