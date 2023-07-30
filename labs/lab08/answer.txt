@@ -1,0 +1,13 @@
+Exercise 1:
+        1. 32 bytes：偏移量5位，2^5 = 32
+        2. 3 TLB Hits. 7 TLB Misses. 0 Page Hits. 7 Page Faults.
+        3. I don't have any Page Hits. Because TLB cover all Physical Page Number of Physical Memory. If TLB misses, it means the content we 
+        want isn't in Physical Memory. So it will never have a Page Hit.
+        4. At the very first access, the Virtual Address was divided into two part, 3-bit page number and 5-bit offset. Then the VPNs of TLB was looked up. None VPNs were matched with page number, which leads to TLB Miss.
+        Then it went down to Page Table. The Valid Bit of that page is 0, which leads to Page Faluts. So it went to hard disk and fetch data to Physical Memory avaliable. At the same time, the TLB and Page Table was updated.
+Exercise 2:
+        1. The memory access: 00 20 40 60 80 a0 c0 e0 00 20.
+Exercise 3:
+        1. Have a bigger Physical Memory.
+Exercise 4:
+        1. In this version of setup, it will first select the process and then load the Page Table. P1, P2, P3, and P4 are different process. Because every time it switch process, it will clear TLB, so TLB misses rate is higher.
