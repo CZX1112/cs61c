@@ -13,35 +13,50 @@ double dotp_naive(double* x, double* y, int arr_size) {
   {
 #pragma omp for
     for (int i = 0; i < arr_size; i++)
-#pragma omp critical
+
       global_sum += x[i] * y[i];
   }
   return global_sum;
 }
 
 // EDIT THIS FUNCTION PART 1
+// 类似上一个v_add，只不过多了个之间相互影响，不用规约关键字reduction则需要临界区
 double dotp_manual_optimized(double* x, double* y, int arr_size) {
   double global_sum = 0.0;
 #pragma omp parallel
   {
-#pragma omp for
-    for (int i = 0; i < arr_size; i++)
-#pragma omp critical
-      global_sum += x[i] * y[i];
+    int tid = omp_get_thread_num();
+    int num_threads = omp_get_num_threads();
+    int chunk_size = arr_size / num_threads;
+    int start = tid * chunk_size;
+    int end = start + chunk_size;
+    double thread_sum = 0;
+
+    for (int i = start; i < end; i++) {
+      thread_sum += x[i] * y[i];
+    }
+
+    // tail case
+    if (tid == num_threads - 1 && end < arr_size) {
+      for (int i = end; i < arr_size; i++) {
+        thread_sum += x[i] * y[i];
+      }
+    }
+
+    // 所有线程都想修改global_sum，使用critical关键字设置临界区
+    #pragma omp critical
+    global_sum += thread_sum;
   }
   return global_sum;
 }
 
 // EDIT THIS FUNCTION PART 2
+// 直接使用规约关键则reduction以及使用for关键字，不需要自己划分chunk
 double dotp_reduction_optimized(double* x, double* y, int arr_size) {
   double global_sum = 0.0;
-#pragma omp parallel
-  {
-#pragma omp for
+  #pragma omp parallel for reduction(+: global_sum)
     for (int i = 0; i < arr_size; i++)
-#pragma omp critical
       global_sum += x[i] * y[i];
-  }
   return global_sum;
 }
 
