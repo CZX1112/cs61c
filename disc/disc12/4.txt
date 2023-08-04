@@ -1,0 +1,94 @@
+4. 数据级并行性
+
+数据级并行的核心思想是向量化计算：同时对多个项目（属于单个向量的一部分）应用操作。
+
+一些 x86 架构的机器具有特殊的、更宽的寄存器，可以容纳 128、256 甚至 512 位。 英特尔内在函数
+（英特尔专有技术）允许我们使用这些更广泛的寄存器来利用 C 代码中的 DLP 的强大功能。
+
+以下是一小部分可用的英特尔内部指令。 它们都使用 128 位寄存器执行操作。 当这些寄存器
+保存 4 个整型、8 个短整型或 16 个字符时，使用类型 m128i； m128d 用于 2 个双精度浮点数，
+m128 用于 4 个单精度浮点数。 在您看到“epiXX”的地方，epi 代表扩展打包整数，XX 是整数中的位数。 
+例如，“epi32”表示我们将 128 位寄存器视为一组 4 个 32 位整数。
+
+• __m128i _mm_set1_epi32(int i):
+将向量中的四个有符号 32 位整数设置为 i。
+• __m128i _mm_loadu_si128( __m128i *p):
+将 p 指向的 4 个连续整数加载到 128 位向量中。
+• __m128i _mm_mullo_epi32(__m128i a, __m128i b):
+Return vector (a0 · b0, a1 · b1, a2 · b2, a3 · b3).
+• __m128i _mm_add_epi32(__m128i a, __m128i b):
+Return vector (a0 + b0, a1 + b1, a2 + b2, a3 + b3)
+• void _mm_storeu_si128( __m128i *p, __m128i a):
+将 128 位向量 a 存储在指针 p 处。
+• __m128i _mm_and_si128(__m128i a, __m128i b):
+将a和b中的128位进行按位与，并返回结果。
+• __m128i _mm_cmpeq_epi32(__m128i a, __m128i b):
+如果第 i 个元素，则返回向量的第 i 个元素将被设置为 0xFFFFFFFF
+a和b的元素相等，否则设置为0。
+
+注意：在此工作表中，我们使用与内存交互的命令的未对齐版本（即 storeu/loadu 与 store/load）。 
+这是因为存储/加载命令要求我们加载的地址在某个字节边界对齐（不一定只是字对齐），
+而未对齐的版本则没有这样的要求。 例如，_mm_store_si128 需要地址在 16 字节边界上对齐
+（即是 16 的倍数）。 为了实现这些对齐要求，需要做额外的工作，因此对于此类，我们只使用未对齐的变体。
+
+4.1 您有一个 32 位整数数组和一个 128 位向量，如下所示：
+1 int arr[8] = {1, 2, 3, 4, 5, 6, 7, 8};
+2 __m128i vector = _mm_loadu_si128((__m128i *) arr);
+
+对于以下每个任务，为每个 SIMD 指令填写正确的参数，并在必要时填写适当的 SIMD 函数。 
+假设它们独立发生，即（a）部分的结果根本不影响（b）部分。
+
+(a) 将向量与其自身相乘，并将结果设置为向量。
+
+1 vector = _mm_mullo_epi32(vector, vector);
+
+(b) 将 arr 的前 4 个元素分别加 1，得到 arr = {2, 3, 4, 5, 5, 6, 7, 8}
+
+1 __m128i vector_ones = _mm_set1_epi32(1):
+2 __m128i result = _mm_add_epi32(vector, vector_ones);
+3 _mm_storeu_si128((__m128i *) arr, result);
+
+(c) 将数组的后半部分与数组的前半部分相加，结果为 arr = {1 + 5, 2 + 6, 3 + 7, 4 + 8, 5, 6, 7, 8} = {6 , 8, 10, 12, 5, 6, 7, 8}
+
+1 __m128i result = _mm_add_epi32((__m128i *) (arr + 4), vector);
+2 _mm_storeu_si128((__m128i *) arr, result);
+
+(d) 将数组中不等于 5 的每个元素设置为 0，结果 arr = {0, 0, 0, 0, 5, 0, 0, 0}。 请记住，数组的前半部分已经加载到向量中。
+
+# 前四个元素
+1 __m128i fives = _mm_set1_epi32(5);
+2 __m128i mask = _mm_cmpeq_epi32(vector, fives);
+3 __m128i result = _mm_and_si128(mask, vector);
+4 __mm_storeu_si128((__m128i *) arr, result);
+# 后四个
+5 vector = _mm_loadu_si128((__m128i *) (arr + 4));
+6 mask = _mm_cmpeq_epi32(vector, fives);
+7 result = _mm_and_si128(mask, vector);
+8 _mm_storeu_si128((__m128i *) (arr + 4), result);
+
+4.2 SIMD 化以下函数，该函数返回数组中所有元素的乘积。 需要考虑的事情：当迭代一个循环
+并一次获取 4 个元素时，我们应该如何更新下一次迭代的索引？ 如果我们的数组的长度不是 4 的倍数怎么办？ 
+我们总是可以对整个数组进行 SIMD 化吗？ 我们该如何处理这个尾箱呢？
+
+static int product_naive(int n, int *a) {
+    int product = 1;
+    for (int i = 0; i < n; i++) {
+        product *= a[i];
+}
+    return product;
+}
+
+static int product_vectorized(int n, int *a) {
+    int result[4];
+    __m128i prod_v = _mm_set1_epi32(1);
+    // Vectorized loop
+    for (int i = 0; i < n / 4 * 4; i += 4) {
+        prod_v = _mm_mullo_epi32(prod_v, _mm_loadu_si128((__m128i *) (a + i)));
+    }
+    __mm_storeu_si128((__m128i *) result, prod_v);
+    // Handle tail case
+    for (int i = n / 4 * 4; i < n; i++) {
+        result[0] *= a[i];
+    }
+    return result[0] * result[1] * result[2] * result[3];
+}
