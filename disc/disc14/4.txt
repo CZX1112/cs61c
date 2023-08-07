@@ -1,0 +1,11 @@
+4. MapReduce映射减少
+
+对于下面的每个问题，编写伪代码来完成实现。 小贴士：
+• 每个MapReduce 作业的输入由map() 的签名给出。
+• emit(key k, value v) 输出键值对(k, v)。
+• for var in list 可用于迭代Iterables，或者您可以调用hasNext() 和next() 函数。
+• 可用数据类型：int、float、String。 您还可以使用列表和自定义
+由上述类型组成的数据类型。
+• intersection(list1, list2)返回list1，list2的公共元素的列表。
+
+4.1 给定一组硬币和每个硬币的所有者（以 CoinPairs 列表的形式），计算一个人拥有的每种面额的硬币数量。
