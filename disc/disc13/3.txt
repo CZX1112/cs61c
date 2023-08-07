@@ -1,0 +1,102 @@
+3. 线程级并行性
+
+尽管数据级并行化功能强大，但它可能非常不灵活，因为并非所有应用程序都具有可以矢量化的数据。 
+多线程，或者在多个硬件线程上运行单个软件，功能更加强大且用途广泛。
+
+OpenMP 提供了一个简单的接口，用于在 C 程序中使用多线程。 OpenMP 指令的一些示例：
+
+• 并行指令指示每个线程应运行块内代码的副本。 如果将 for 循环放入块中，则每个线程都将运行 for 循环的每次迭代。
+
+• 并行for 指令将在不同线程上拆分for 循环的迭代。 每个线程将运行不同的 for 循环迭代。 以下两个代码片段是等效的。
+
+您可以调用两个可能对您有用的函数：
+• int omp_get_thread_num() 将返回执行代码的线程数
+• int omp_get_num_threads() 将返回执行代码的硬件线程总数
+
+3.1 对于下面的每个问题，说明并证明程序是否有时不正确、始终不正确、比串行慢、比串行快，或者以上都不是。 
+假设默认线程数大于 1。假设没有线程会在另一个线程开始执行之前完成。 假设 arr 是长度为 n 的 int[]。
+(a)
+// Set element i of arr to i
+#pragma omp parallel
+{
+    for (int i = 0; i < n; i++)
+    arr[i] = i;
+}
+
+比串行慢：没有 for 指令，因此每个线程都会完整执行此循环。 同时运行 n 个循环的 n 个线程实际上将与
+运行 1 个循环的 1 个线程同时执行。 尽管存在错误共享的可能性，但这些值在循环结束时应该都是正确的。 
+此外，由于额外的线程数量而导致的并行开销的存在可能会减慢执行时间。
+
+(b)
+// Set arr to be an array of Fibonacci numbers.
+arr[0] = 0;
+arr[1] = 1;
+#pragma omp parallel for
+for (int i = 2; i < n; i++)
+    arr[i] = arr[i-1] + arr[i - 2];
+
+总是不正确（当 n > 4 时）：循环具有数据依赖性，因此除第一个线程之外的所有线程的计算都将依赖于前一个线程的数据。
+因为我们说过“假设在另一个线程开始执行之前没有线程完成”，所以这段代码总是会读取不正确的值。
+
+(c)
+// Set all elements in arr to 0;
+int i;
+#pragma omp parallel for
+for (i = 0; i < n; i++)
+    arr[i] = 0;
+
+比串行更快：for指令实际上自动将循环变量（例如索引）设为私有，因此这可以正常工作。 for 指令将循环的
+迭代拆分为每个线程的连续块，因此不会出现数据依赖或错误共享。
+
+3.2 这段代码可能会出现什么潜在问题？
+
+1 // Decrements element i of arr. n is a multiple of omp_get_num_threads()
+2 #pragma omp parallel
+3 {
+4   int threadCount = omp_get_num_threads();
+5   int myThread = omp_get_thread_num();
+6   for (int i = 0; i < n; i++) {
+7       if (i % threadCount == myThread) arr[i] -= 1;
+8   }
+9 }
+
+错误共享的出现是因为不同的线程可以同时修改位于同一内存块中的元素。 这是一个问题，因为某些线程在修改值 arr[i] 时，
+其缓存块中可能有不正确的值，从而使缓存块无效。
+
+3.3
+1 // Assume n holds the length of arr
+2 double fast_product(double *arr, int n) {
+3 double product = 1;
+4 #pragma omp parallel for
+5 for (int i = 0; i < n; i++) {
+6   product *= arr[i];
+7   }
+8 return product;
+9 }
+
+(a) 这段代码有什么问题？
+
+该代码具有共享变量product。
+
+(b) Fix the code using #pragma omp critical
+
+1 double fast_product(double *arr, int n) {
+2 double product = 1;
+3 #pragma omp parallel for
+4 for (int i = 0; i < n; i++) {
+5   #pragma omp critical
+6   product *= arr[i];
+7   }
+8 return product;
+9 }
+
+(c) Fix the code using #pragma omp reduction(operation: var).
+
+1 double fast_product(double *arr, int n) {
+2   double product = 1;
+3   #pragma omp parallel for reduction(*: product)
+4   for (i = 0; i < n; i++) {
+5       product *= arr[i];
+6   }
+7   return product;
+8 }
